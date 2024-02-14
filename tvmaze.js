@@ -18,39 +18,19 @@ const MISSING_URL = "https://tinyurl.com/tv-missing";
 async function getShowsByTerm(term) {
   // ADD: Remove placeholder & make request to TVMaze search shows API.
   const params = new URLSearchParams({q:term});
-  //fetch(`/resource!${term}`);
-  console.log(params);
   const response = await fetch(`${TVMAZE_URL}search/shows?${params}`);
-  console.log(response);
   const data = await response.json();
-  console.log(await data);
-  const filteredData = data.map(show => (
-    id: show.id,
-    name: show.name,
-    summary: show.summary,
-    image: show.image ? show.image : MISSING_URL
-  ));
+  const filteredData = [];
+  data.map(entry => {
+    const showData = {};
+    showData.id = entry.show.id;
+    showData.name = entry.show.name;
+    showData.summary = entry.show.summary;
+    showData.image = entry.show.image ? entry.show.image.original : MISSING_URL;
+    filteredData.push(showData);
+  });
 
-
-
-  return [
-    {
-      id: 1767,
-      name: "The Bletchley Circle",
-      summary:
-        `<p><b>The Bletchley Circle</b> follows the journey of four ordinary
-           women with extraordinary skills that helped to end World War II.</p>
-         <p>Set in 1952, Susan, Millie, Lucy and Jean have returned to their
-           normal lives, modestly setting aside the part they played in
-           producing crucial intelligence, which helped the Allies to victory
-           and shortened the war. When Susan discovers a hidden code behind an
-           unsolved murder she is met by skepticism from the police. She
-           quickly realises she can only begin to crack the murders and bring
-           the culprit to justice with her former friends.</p>`,
-      image:
-          "http://static.tvmaze.com/uploads/images/medium_portrait/147/369403.jpg"
-    }
-  ]
+  return filteredData;
 }
 
 
@@ -67,8 +47,8 @@ function displayShows(shows) {
         <div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img
-              src="http://static.tvmaze.com/uploads/images/medium_portrait/160/401704.jpg"
-              alt="Bletchly Circle San Francisco"
+              src=${show.image}
+              alt=Image of "${show.name}"
               class="w-25 me-3">
            <div class="media-body">
              <h5 class="text-primary">${show.name}</h5>
