@@ -3,8 +3,9 @@
 const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
-const TVMAZE_URL = "http://api.tvmaze.com/";
-const MISSING_URL = "https://tinyurl.com/tv-missing";
+
+const TVMAZE_BASE_URL = "http://api.tvmaze.com/";
+const MISSING_IMAGE_URL = "https://tinyurl.com/tv-missing";
 
 
 
@@ -16,21 +17,19 @@ const MISSING_URL = "https://tinyurl.com/tv-missing";
  */
 
 async function getShowsByTerm(term) {
-  // ADD: Remove placeholder & make request to TVMaze search shows API.
   const params = new URLSearchParams({q:term});
-  const response = await fetch(`${TVMAZE_URL}search/shows?${params}`);
+  const response = await fetch(`${TVMAZE_BASE_URL}search/shows?${params}`);
   const data = await response.json();
-  const filteredData = [];
-  data.map(entry => {
-    const showData = {};
-    showData.id = entry.show.id;
-    showData.name = entry.show.name;
-    showData.summary = entry.show.summary;
-    showData.image = entry.show.image ? entry.show.image.original : MISSING_URL;
-    filteredData.push(showData);
-  });
 
-  return filteredData;
+  /**Parsing through the data and getting the required information */
+  return data.map(entry => {
+    return {
+      id: entry.show.id,
+      name: entry.show.name,
+      summary: entry.show.summary,
+      image: entry.show.image ? entry.show.image.original : MISSING_IMAGE_URL
+    };
+  });
 }
 
 
@@ -88,10 +87,38 @@ $searchForm.on("submit", async function handleSearchForm (evt) {
  *      { id, name, season, number }
  */
 
-// async function getEpisodesOfShow(id) { }
+async function getEpisodesOfShow(id) {
+  const response = await fetch(`${TVMAZE_BASE_URL}shows/1/episodes`);
+  const data = await response.json();
+
+
+  return data.map(episode => {
+    return {
+      id: episode.id,
+      name: episode.name,
+      season: episode.season,
+      number: episode.number
+    }
+  });
+ }
 
 /** Write a clear docstring for this function... */
 
-// function displayEpisodes(episodes) { }
+function displayEpisodes(episodes) {
+  for (let episode of episodes) {
+    const $episodeListItem = $("<li>")
+    console.log("check");
+    $episodeListItem.text(`${episode.name} (Season ${episode.season}, Number ${episode.number})`);
+    $("#episodesList").append($episodeListItem);
+  }
+  $episodesArea.attr("style", "display: block");
+ }
 
 // add other functions that will be useful / match our structure & design
+
+async function getEpisodesAndDisplay(showId) {
+  const episodeList = await getEpisodesOfShow(showId);
+  displayEpisodes(episodeList);
+}
+
+$showsList.on("click", ".Show-getEpisodes", getEpisodesAndDisplay);
