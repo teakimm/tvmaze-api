@@ -3,6 +3,7 @@
 const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
+const $episodesList = $("#episodesList");
 
 const TVMAZE_BASE_URL = "http://api.tvmaze.com/";
 const MISSING_IMAGE_URL = "https://tinyurl.com/tv-missing";
@@ -88,9 +89,8 @@ $searchForm.on("submit", async function handleSearchForm (evt) {
  */
 
 async function getEpisodesOfShow(id) {
-  const response = await fetch(`${TVMAZE_BASE_URL}shows/1/episodes`);
+  const response = await fetch(`${TVMAZE_BASE_URL}shows/${id}/episodes`);
   const data = await response.json();
-
 
   return data.map(episode => {
     return {
@@ -102,23 +102,36 @@ async function getEpisodesOfShow(id) {
   });
  }
 
-/** Write a clear docstring for this function... */
+/** Empties any prexisting episodes and then populates all the episodes from
+ * the given array of episodes into the episodes list. Also shows the list
+ * as it is hidden by default.
+ */
 
 function displayEpisodes(episodes) {
+  $episodesList.empty();
+
   for (let episode of episodes) {
     const $episodeListItem = $("<li>")
-    console.log("check");
     $episodeListItem.text(`${episode.name} (Season ${episode.season}, Number ${episode.number})`);
-    $("#episodesList").append($episodeListItem);
+    $episodesList.append($episodeListItem);
   }
+
   $episodesArea.attr("style", "display: block");
  }
 
-// add other functions that will be useful / match our structure & design
+/** Controller function that gets the list of episodes and appends them
+ * to the episode list div.
+ */
 
 async function getEpisodesAndDisplay(showId) {
   const episodeList = await getEpisodesOfShow(showId);
   displayEpisodes(episodeList);
 }
 
-$showsList.on("click", ".Show-getEpisodes", getEpisodesAndDisplay);
+/** Event listener that gets the show where the button was clicked so that
+ * the current episodes can be populated.
+ */
+$showsList.on("click", ".Show-getEpisodes", async function(evt) {
+  const showID = $(evt.target).closest(".Show").data("show-id");
+  await getEpisodesAndDisplay(showID);
+});
